@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gentis Arbor · the unified Danenberg family tree</title>
+<link rel="stylesheet" href="style.css?v=202610270950">
+</head>
+<body>
+<header>
+  <a class="home" href="../" style="margin-right:1em">← danenberg.family</a>
+  <h1><span class="latin">Gentis Arbor</span> · the unified family tree</h1>
+  <span id="build" class="build"></span>
+  <span id="counts" class="counts"></span>
+</header>
+
+<main>
+  <aside id="controls">
+    <section>
+      <label class="h" for="search">Find a person</label>
+      <div class="searchbox">
+        <input id="search" type="search" placeholder="Name…" autocomplete="off">
+        <ul id="results"></ul>
+      </div>
+    </section>
+
+    <section>
+      <div class="h">View</div>
+      <div id="focusline">Focus: <a href="#" id="focusname"></a></div>
+      <div class="row">
+        <select id="mode">
+          <option value="ancestors">Ancestors</option>
+          <option value="descendants">Descendants</option>
+          <option value="both">Ancestors + descendants</option>
+          <option value="all">Whole tree</option>
+        </select>
+        <label class="depth">gens <select id="depth">
+          <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
+          <option>6</option><option>8</option><option>10</option><option value="99" selected>all</option>
+        </select></label>
+      </div>
+      <label class="row">Layout <select id="orient">
+          <option value="lr">ancestors left → descendants right</option>
+          <option value="tb">ancestors above, descendants below</option>
+        </select></label>
+      <label class="chk"><input type="checkbox" id="blood" checked> blood lines only (skip adoptive)</label>
+      <label class="chk"><input type="checkbox" id="ghosts" checked> candidate (ghost) people</label>
+      <div class="row buttons">
+        <button id="reset" title="Peter, his blood ancestry, every class">Reset view</button>
+        <button id="fit" title="Fit the drawing to the window">Fit</button>
+      </div>
+    </section>
+
+    <section>
+      <div class="h">Evidence <span class="quick"><a href="#" id="spec-toggle">speculative</a> · <a href="#" id="rej-toggle">rejected</a> · <a href="#" id="all-toggle">all</a></span></div>
+      <div id="classes"></div>
+    </section>
+
+    <section>
+      <div class="h">Branches</div>
+      <div id="branches"></div>
+      <div class="nodekey">
+        <div><svg width="34" height="16"><rect x="1" y="1" width="32" height="14" rx="3" class="k-ghost"/></svg> candidate (ghost): proposed by a lead, not in the tree</div>
+        <div><svg width="34" height="16"><rect x="1" y="1" width="32" height="14" rx="3" class="k-living"/></svg> living: details private</div>
+        <div><svg width="34" height="16"><rect x="1" y="11" width="20" height="3" fill="#4a8a3a"/><rect x="21" y="11" width="6" height="3" fill="#d9a441"/><rect x="27" y="11" width="6" height="3" fill="#b9b9b9"/></svg> facts: sourced · trees only · 2015 tree only</div>
+      </div>
+    </section>
+    <footer id="about"></footer>
+  </aside>
+
+  <div id="canvas">
+    <svg id="svg">
+      <defs></defs>
+      <g id="viewport"></g>
+    </svg>
+    <div id="status"></div>
+  </div>
+
+  <aside id="panel">
+    <nav class="tabs">
+      <button data-tab="person" class="on">Person</button>
+      <button data-tab="leads">Leads <span id="nleads"></span></button>
+      <button data-tab="help">About</button>
+    </nav>
+    <div id="tab-person" class="tab on"><p class="hint">Click a person to see their facts, sources, family and leads. Double-click to focus the tree on them.</p></div>
+    <div id="tab-leads" class="tab"></div>
+    <div id="tab-help" class="tab"></div>
+  </aside>
+</main>
+
+<script src="vendor/d3.v7.9.0.min.js"></script>
+<script src="vendor/dagre.1.1.8.min.js"></script>
+<script src="app.js?v=202610270950"></script>
+</body>
+</html>
