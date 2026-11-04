@@ -4,11 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Gentis Arbor · the unified Danenberg family tree</title>
-<link rel="stylesheet" href="style.css?v=202610270957">
+<link rel="stylesheet" href="style.css?v=202611032330">
+<style>header .sitenav { font: 13px/1.4 var(--sans, sans-serif); margin-right: 1.2em; white-space: nowrap; } header h1 { white-space: nowrap; font-size: 16px; } header .counts { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } header .sitenav a { color: inherit; text-decoration: none; } header .sitenav a:hover { text-decoration: underline; } header .sitenav a[aria-current] { font-weight: 600; }</style>
 </head>
 <body>
 <header>
-  <a class="home" href="../" style="margin-right:1em">← danenberg.family</a>
+  <nav class="sitenav" aria-label="Site"><a href="../">Home</a> · <a href="../people/">People</a> · <a href="../tree/" aria-current="page">Tree</a> · <a href="../memoir/">Memoir</a> · <a href="../timeline/">Chronicle</a> · <a href="../map/">Map</a> · <a href="../sources/">Sources</a> · <a href="../questions/">Questions</a> · <a href="../records/">Records</a> · <a href="../about/">About</a></nav>
   <h1><span class="latin">Gentis Arbor</span> · the unified family tree</h1>
   <span id="build" class="build"></span>
   <span id="counts" class="counts"></span>
@@ -43,7 +44,7 @@
           <option value="lr">ancestors left → descendants right</option>
           <option value="tb">ancestors above, descendants below</option>
         </select></label>
-      <label class="chk"><input type="checkbox" id="blood" checked> blood lines only (skip adoptive)</label>
+      <label class="chk"><input type="checkbox" id="blood"> blood lines only (skip adoptive)</label>
       <label class="chk"><input type="checkbox" id="ghosts" checked> candidate (ghost) people</label>
       <div class="row buttons">
         <button id="reset" title="Peter, his blood ancestry, every class">Reset view</button>
@@ -90,6 +91,6 @@
 
 <script src="vendor/d3.v7.9.0.min.js"></script>
 <script src="vendor/dagre.1.1.8.min.js"></script>
-<script src="app.js?v=202610270957"></script>
+<script src="app.js?v=202611032330"></script>
 </body>
 </html>

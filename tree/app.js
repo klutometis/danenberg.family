@@ -19,9 +19,11 @@
   const byUnion = new Map();              // union id -> [edge]
   const unionsOf = new Map();             // person id -> [union]
   const linksOf = new Map();              // person id -> [link]
+  // Opening view (Peter, 2026-10-27): him in the middle, his ancestors and his children; adoptive
+  // links drawn (purple), candidate people on, the ruled-out ones off behind their toggle.
   const state = {
-    classes: new Set(), ghosts: true, blood: true,
-    focus: null, mode: "ancestors", depth: 99, selected: null, orient: "lr",
+    classes: new Set(), ghosts: true, blood: false,
+    focus: null, mode: "both", depth: 99, selected: null, orient: "lr",
   };
   let layout = null;                      // last layout: {nodes: Map id -> {x,y}, ...}
   const svg = d3.select("#svg"), vp = d3.select("#viewport");
@@ -72,7 +74,7 @@
     for (const e of E) { push(byChild, e.child, e); push(byUnion, e.union, e); }
     for (const u of D.unions) for (const p of u.partners) push(unionsOf, p, u);
     for (const l of L) { push(linksOf, l.from, l); push(linksOf, l.to, l); }
-    Object.keys(D.classes).forEach((c) => state.classes.add(c));
+    Object.keys(D.classes).forEach((c) => { if (!REJECTED.includes(c)) state.classes.add(c); });
 
     const m = D.meta, c = m.counts;
     d3.select("#build").text(m.build + " build").classed("private", m.build === "private");
@@ -110,7 +112,7 @@
     for (const [cls, info] of Object.entries(D.classes)) {
       const n = classCount(cls);
       const row = box.append("label").attr("class", "cls").attr("title", info.desc);
-      row.append("input").attr("type", "checkbox").attr("value", cls).property("checked", true)
+      row.append("input").attr("type", "checkbox").attr("value", cls).property("checked", state.classes.has(cls))
         .on("change", function () { this.checked ? state.classes.add(cls) : state.classes.delete(cls); render(true); });
       row.append("span").html(edgeSample(cls));
       row.append("span").text(info.label);
@@ -197,8 +199,9 @@
   }
 
   function reset() {
-    state.focus = D.meta.proband; state.mode = "ancestors"; state.depth = 99; state.blood = true; state.ghosts = true;
+    state.focus = D.meta.proband; state.mode = "both"; state.depth = 99; state.blood = false; state.ghosts = true;
     setClasses(Object.keys(D.classes), true);
+    setClasses(REJECTED, false);
     syncControls(); render(true);
   }
 

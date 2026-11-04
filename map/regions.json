@@ -1,0 +1,47 @@
+[
+  {
+    "name": "Vidzeme",
+    "members": ["Vidzeme", "Latvia"],
+    "why": "Seventy-two relatives in Vidzeme—at Vīstuči farm, Rīga, Priekuļi, Cēsis, Rauna, Salaca and Jaungulbene (the Sirlaks, Āboltiņš, Ģibols, Smukuls and Jurciņš families, 1742–2018)—and the six recorded only at country level ('Latvia', 1931–1983) share the Vidzeme lens, while the Danenbergs' Kurzeme places (Stūrmuiža, Penkule, Jelgava, Stende, Talsi) stay distinct when zoomed in."
+  },
+  {
+    "name": "Great Lakes",
+    "members": ["Ohio", "Michigan", "Wisconsin", "Ontario"],
+    "why": "After leaving Germany in 1949–1950, the Latvian family (Arvīds and Elvīra Danenbergs, Emma Smukule, the Balks, Augenbergs, Zadvinskis, Gailītis and Grīslis families, plus earlier Halls and Kerbrats) settled and moved across Ohio (Liberty Township, Tiffin, Cleveland, Columbus, Midland), Michigan (Decatur, Cassopolis, Southfield, Beverly Hills, Birmingham, Roseville), Wisconsin (Milwaukee, Madison) and Ontario (Toronto, Hamilton, St. Catharines, Windsor) inside one Great Lakes lens."
+  },
+  {
+    "name": "Pacific Northwest",
+    "members": ["Oregon", "Washington"],
+    "why": "The Alderson, Royal, Newman and Hall families lived on both sides of the Columbia River and across Oregon (Portland, Milwaukie, Concord, Sheridan, Gilliam and Umatilla counties, 20 people, 1852–2018) and Washington (Vancouver, Vancouver Barracks, Camp Lewis, Seattle, Tacoma, Toroda Creek and Conconully, 13 people, 1864–1938)."
+  },
+  {
+    "name": "England",
+    "members": ["Bongate", "United Kingdom", "Penrith", "Great Yarmouth"],
+    "why": "Christopher Alderson Sr., Mary Veach and Christopher Alderson Jr. in Westmorland and Cumberland (Bongate and Penrith, 1799–1870) and William Robert Newman, Elizabeth Flower and Edward Newman in Norfolk (Great Yarmouth and Freethorpe, recorded under 'United Kingdom', 1813–1862) are the four English areas whose recorded names lack a common country."
+  },
+  {
+    "name": "New York",
+    "members": ["Albany", "Oak Orchard", "Yates"],
+    "why": "Harriet M. Brate was born to Brate and Doken in Albany, Albany County, New York (1847/1848) and lived with her husband Edward Newman and daughter Carrie May Newman in Yates (Lyndonville) and Oak Orchard (Ridgeway), Orleans County, New York (1874–1880, where William Robert Newman also died in 1890), all three recorded in areas.tsv without the state name."
+  },
+  {
+    "name": "Illinois",
+    "members": ["Fox River", "Mazon"],
+    "why": "Charles Royal, Mary Ann Gearhart and their daughter Mary Catharine Royal lived in northern Illinois at Fox River, LaSalle County (1839–1846) and neighbouring Mazon, Grundy County (1846–1852) before crossing the Oregon Trail, both recorded without the state name."
+  },
+  {
+    "name": "Indiana",
+    "members": ["Fountain County"],
+    "why": "Charles Royal and Mary Ann Gearhart farmed in Fountain County, Indiana (1830–1835) between their stays in Miami County, Ohio and northern Illinois, recorded without the state name."
+  },
+  {
+    "name": "Kansas",
+    "members": ["Ash Rock"],
+    "why": "Edward Newman, Harriet M. Brate and Carrie May Newman farmed in Ash Rock Township, Rooks County, Kansas in the 1880 census (1879–1880) on their way from New York to Oregon and Washington, recorded without the state name."
+  },
+  {
+    "name": "Virginia",
+    "members": ["Warren County", "Lexington"],
+    "why": "Charles Royal was born in Warren County, Virginia (1798) and his wife Mary Ann Gearhart in Lexington, Rockbridge County, Virginia (1802), two Shenandoah Valley places recorded without the full state name."
+  }
+]

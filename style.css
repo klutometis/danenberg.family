@@ -168,3 +168,371 @@ table.rows .b { color: var(--muted, #555); white-space: nowrap; }
 .srcimgs figure.record { max-width: 32rem; }
 figure.evidence img { width: 100%; }
 figcaption a.ctx { white-space: nowrap; }
+
+/* ---------------------------------------------------------------- the family map */
+.mapwrap { position: relative; border: 1px solid #cdc2ab; background: #c6dae7; border-radius: 4px;
+           overflow: hidden; margin: .8rem 0 .4rem; }
+.mapwrap svg { display: block; width: 100%; height: auto; touch-action: none; cursor: grab; background: #c6dae7; }
+.mapwrap svg:active { cursor: grabbing; }
+.mapwrap .land path { fill: #f9f4e8; stroke: #b3a68c; stroke-width: .6px; vector-effect: non-scaling-stroke; }
+.mapwrap .lakes path { fill: #c6dae7; stroke: none; }
+.mapwrap .borders path { fill: none; stroke: #c0b49b; stroke-width: .5px; vector-effect: non-scaling-stroke; }
+.mapwrap circle.pt { stroke: #fffdf8; stroke-opacity: .9; fill-opacity: .95; cursor: pointer; }
+.mapwrap circle.pt.region { fill-opacity: .35; stroke-dasharray: 3 2; }
+.mapwrap circle.pt.on { stroke: #8c2d19; stroke-width: 2.5px !important; }
+.mapwrap circle.pt:focus { outline: 2px solid #8c2d19; outline-offset: 2px; }
+.mapwrap path.jp { fill: none; stroke-opacity: .7; stroke-linecap: round; stroke-linejoin: round;
+                   filter: saturate(1.6) brightness(.72); }
+.mapwrap path.jp.on { stroke-opacity: 1; filter: saturate(1.8) brightness(.6); }
+.mapwrap .labels text { text-anchor: middle; fill: #3f382c; paint-order: stroke;
+                        stroke: #fffdf8; stroke-linejoin: round; pointer-events: none; }
+.mapzoom { position: absolute; right: .5rem; top: .5rem; display: flex; flex-direction: column; gap: .25rem; }
+.mapzoom button { width: 1.9rem; height: 1.9rem; font-size: 1rem; line-height: 1; cursor: pointer;
+                  background: #fffdf8; border: 1px solid #cfc6b4; border-radius: 3px; }
+.mapctl { font-size: .86rem; margin-bottom: 1.2rem; }
+.mapctl .row { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem .9rem; margin: .35rem 0; }
+.mapctl input[type=range] { width: 11rem; }
+.mapctl output { font-variant-numeric: tabular-nums; color: #6b6355; }
+.mapctl .count { color: #6b6355; margin-left: auto; }
+.mapctl .chk { display: inline-flex; align-items: center; gap: .3rem; }
+.mapctl .sw { display: inline-block; width: .75rem; height: .75rem; border: 1px solid #0003; border-radius: 2px; }
+.mapctl .n { color: #8a8273; font-size: .8em; }
+.mappanel { position: absolute; right: .5rem; bottom: .5rem; width: min(22rem, 70%); max-height: 70%;
+            overflow: auto; background: #fffdf8ee; border: 1px solid #ddd6c8; border-radius: 4px;
+            padding: .6rem .8rem; box-shadow: 0 2px 10px #0002; font-size: .85rem; }
+.mappanel h3 { margin: 0 .9rem .15rem 0; font-size: 1rem; }
+.mappanel .where { margin: 0 0 .4rem; color: #6b6355; font-size: .82rem; }
+.mappanel ul.who { list-style: none; margin: 0; padding: 0; }
+.mappanel ul.who > li { margin-bottom: .35rem; }
+.mappanel ul.who ul { list-style: none; margin: 0 0 0 .8rem; padding: 0; color: #6b6355; font-size: .95em; }
+.mappanel button.trace { font: inherit; font-size: .78em; padding: 0 .3rem; margin-left: .3rem; cursor: pointer; }
+.mappanel button.x { position: absolute; right: .4rem; top: .3rem; border: 0; background: none;
+                     font-size: 1.2rem; line-height: 1; cursor: pointer; color: #8a8273; }
+@media (max-width: 640px) { .mappanel { position: static; width: auto; max-height: none; margin-top: .5rem; } }
+@media print { .mapwrap, .mapctl, .mappanel { display: none; } }
+
+/* lives mode: a dot per person, moving through the years */
+.modes { display: inline-flex; border: 1px solid #cfc6b4; border-radius: 3px; overflow: hidden; }
+.modes button { font: inherit; font-size: .9em; padding: .1rem .7rem; border: 0; background: #fffdf8;
+                cursor: pointer; color: #6b6355; }
+.modes button + button { border-left: 1px solid #cfc6b4; }
+.modes button.on { background: #6b6355; color: #fffdf8; }
+#mapnote { margin: .3rem 0 0; color: #6b6355; font-size: .82rem; max-width: 60ch; }
+.mapwrap circle.anchor { pointer-events: none; opacity: .5; }
+.mapwrap g.life { cursor: pointer; }
+.mapwrap g.life circle { stroke: #fffdf8; stroke-opacity: .9; }
+.mapwrap g.life text { fill: #3f382c; paint-order: stroke; stroke: #fffdf8; stroke-linejoin: round;
+                       pointer-events: none; }
+.mapwrap g.life:focus { outline: none; }
+.mapwrap g.life:focus circle { stroke: #8c2d19; stroke-width: 2px; }
+.mapwrap path.trail { fill: none; stroke-opacity: .5; stroke-linecap: round; stroke-linejoin: round; }
+.mapwrap path.trail.on { stroke-opacity: .95; }
+.mapwrap circle.anchor { fill: #fffdf8; stroke: #8a8273; cursor: pointer; }
+.mapwrap circle.anchor:hover { stroke: #8c2d19; }
+.mapwrap text.placename { text-anchor: middle; fill: #6b6355; paint-order: stroke;
+                          stroke: #fffdf8; stroke-linejoin: round; pointer-events: none; }
+
+/* places drawn by what they are: a house for a farm, a cross for a church, a tent for a camp */
+.mapwrap g.anchor { cursor: pointer; }
+.mapwrap g.anchor path { fill: #fffdf8; stroke: #6b6355; stroke-width: 1.1; }
+.mapwrap g.anchor.quiet path { fill: none; stroke: #b5a98f; stroke-width: .8; opacity: .55; }
+.mapwrap g.anchor:hover path { stroke: #8c2d19; }
+.mapwrap g.anchor:focus { outline: none; }
+.mapwrap g.anchor:focus path { stroke: #8c2d19; stroke-width: 2; }
+.mapwrap g.anchor.t-port path, .mapwrap g.anchor.t-ship path,
+.mapwrap g.anchor.t-school path, .mapwrap g.anchor.t-university path { fill: none; }
+.mapwrap g.anchor.t-cemetery path { fill: #e9e2d2; }
+.mapwrap text.placename.quiet { fill: #a89c84; font-style: italic; }
+.mappanel ol.stops { margin: .3rem 0 0 1.1rem; padding: 0; font-size: .85rem; }
+.mappanel ol.stops li { margin-bottom: .1rem; }
+.mappanel .what { color: #6b6355; }
+
+/* ================================================================ the family map, version 2
+   docs/design/2026-11-01-family-map-v2.md. Markers are sized in screen pixels by map.js. */
+#mapapp { margin: 1rem 0 1.4rem; }
+#mapapp .mapbar { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem .8rem; font-size: .9rem;
+                  padding: .5rem .7rem; background: #f4f1ea; border: 1px solid #e0d9cb; border-radius: 4px 4px 0 0; }
+#mapapp .mapbar button { font: inherit; padding: .15rem .6rem; cursor: pointer; border: 1px solid #cfc6b4;
+                         background: #fffdf8; border-radius: 3px; }
+#mapapp .mapbar button:disabled { opacity: .45; cursor: default; }
+#mapapp #play { font-weight: 600; min-width: 5.6rem; }
+#mapapp .yearwrap { flex: 1 1 14rem; max-width: 26rem; position: relative; display: flex; align-items: center; }
+#mapapp #year { flex: 1 1 auto; width: 100%; }
+#mapapp #yearout { font-variant-numeric: tabular-nums; min-width: 4.5rem; font-weight: 600; }
+#mapapp .count { color: #6b6355; }
+#mapapp .find { margin-left: auto; position: relative; }
+#mapapp .findlist { position: absolute; right: 0; top: 100%; z-index: 30; min-width: 22rem; max-height: 22rem; overflow: auto;
+                    margin: .2rem 0 0; padding: .2rem 0; list-style: none; background: #fffdf8; border: 1px solid #cdc2ab;
+                    box-shadow: 0 4px 14px rgba(60, 50, 30, .18); font-size: .88rem; }
+#mapapp .findlist li { padding: .25rem .7rem; cursor: pointer; white-space: nowrap; }
+#mapapp .findlist li.on { background: #fff3cf; }
+#mapapp .findlist li.none { color: #8a7f6a; cursor: default; }
+#mapapp .findlist .life, #mapapp .findlist .aka { color: #8a7f6a; font-size: .82rem; }
+#mapapp .mapwrap { position: relative; border: 1px solid #cdc2ab; border-top: 0; background: #d3e2eb;
+                   overflow: hidden; margin: 0; }
+#mapapp #world { display: block; width: 100%; height: min(68vh, 640px); min-height: 420px; touch-action: none; cursor: grab; }
+#mapapp #world:active { cursor: grabbing; }
+#mapapp .inset { position: absolute; right: .6rem; bottom: .6rem; width: 37%; min-width: 300px; aspect-ratio: 1.55;
+                 background: #d3e2eb; border: 1.5px solid #8a7f6a; border-radius: 3px; box-shadow: 0 2px 10px #0003;
+                 overflow: hidden; }
+#mapapp .insettitle { position: absolute; left: .5rem; top: .3rem; font-size: .8rem; letter-spacing: .06em;
+                      text-transform: uppercase; color: #6b6355; pointer-events: none; z-index: 1; }
+#mapapp .inset svg { display: block; width: 100%; height: 100%; touch-action: none; cursor: grab; }
+#mapapp .base .land { fill: #f6f1e4; stroke: #b8ac93; stroke-width: .7px; vector-effect: non-scaling-stroke; }
+#mapapp .base .lakes { fill: #d3e2eb; stroke: none; }
+#mapapp .base .borders { fill: none; stroke: #c4b8a0; stroke-width: .6px; vector-effect: non-scaling-stroke; }
+#mapapp .over { pointer-events: none; }
+#mapapp path.mark { fill: #fffdf8; stroke: #6b6355; stroke-width: 1.1; vector-effect: non-scaling-stroke; }
+#mapapp path.mark.region { fill: none; stroke-dasharray: 2 2; opacity: .7; }
+#mapapp path.mark.t-port, #mapapp path.mark.t-ship, #mapapp path.mark.t-school, #mapapp path.mark.t-university { fill: none; }
+#mapapp path.mark.on { stroke: #8c2d19; stroke-width: 2.4; }
+#mapapp circle.dot { stroke-width: 1.4px; }
+#mapapp circle.dot.gone { stroke-width: 2px; }
+#mapapp circle.dot.inferred { stroke-dasharray: 2.5 1.8; stroke-width: 1.6px; }
+#mapapp circle.dot.sel { stroke: #3f382c !important; stroke-width: 2.6px; }
+#mapapp circle.dot.kin { stroke: #3f382c !important; stroke-width: 1.8px; }
+#mapapp text.lab { paint-order: stroke; stroke: #fffdf8; stroke-width: 3.2px; stroke-linejoin: round; }
+#mapapp text.lab.person { font-size: 12.5px; fill: #2e2920; font-weight: 600; }
+#mapapp text.lab.person.sel { font-size: 13.5px; }
+#mapapp text.lab.place { font-size: 11.5px; fill: #6b6355; text-anchor: middle; }
+#mapapp path.leg { fill: none; stroke-width: 3px; stroke-linecap: round; opacity: .9; }
+#mapapp path.leg.future { stroke-dasharray: 4 5; opacity: .45; }
+#mapapp g.corr path.band { fill: none; stroke-linecap: round; opacity: .42; }
+#mapapp g.corr path.arrow { opacity: .75; }
+#mapapp g.corr.on path.band { opacity: .8; }
+#mapapp g.lv rect { fill: none; stroke: #8c2d19; stroke-width: 1.5px; stroke-dasharray: 4 3; }
+#mapapp g.lv text { font-size: 12.5px; fill: #8c2d19; font-weight: 600; paint-order: stroke; stroke: #fffdf8; stroke-width: 3px; }
+#mapapp .caption { position: absolute; left: 50%; top: .6rem; transform: translateX(-50%); pointer-events: none; white-space: nowrap;
+                   background: #fffdf8e8; border: 1px solid #ddd6c8; border-radius: 4px; padding: .25rem .8rem;
+                   box-shadow: 0 1px 6px #0002; text-align: center; max-width: 60%; }
+#mapapp .caption .yr { font-size: 1.5rem; font-weight: 600; font-variant-numeric: tabular-nums; margin-right: .6rem; }
+#mapapp .caption .cap { font-size: .95rem; color: #3f382c; }
+#mapapp .mappanel { position: absolute; left: .6rem; top: .6rem; width: min(22rem, 34%); max-height: calc(100% - 1.2rem);
+                    overflow: auto; background: #fffdf8f2; border: 1px solid #ddd6c8; border-radius: 4px;
+                    padding: .6rem .8rem; box-shadow: 0 2px 10px #0002; font-size: .88rem; }
+#mapapp .mappanel h3 { margin: 0 1.2rem .15rem 0; font-size: 1.05rem; }
+#mapapp .mappanel .where { margin: 0 0 .4rem; color: #6b6355; font-size: .85rem; }
+#mapapp .mappanel ol.stops, #mapapp .mappanel ul.who { margin: .3rem 0 .4rem 1.2rem; padding: 0; }
+#mapapp .mappanel ul.who { list-style: none; margin-left: 0; }
+#mapapp .mappanel li { margin-bottom: .15rem; }
+#mapapp .mappanel .what { color: #6b6355; }
+#mapapp .mappanel .kin { margin: .35rem 0; }
+#mapapp .mappanel button.x { position: absolute; right: .4rem; top: .25rem; border: 0; background: none;
+                             font-size: 1.25rem; cursor: pointer; color: #8a7f6a; }
+#mapapp button.lnk { font: inherit; border: 0; background: none; padding: 0; color: #8c2d19; cursor: pointer;
+                     text-decoration: underline; text-decoration-color: #8c2d1955; }
+#mapapp .picker { position: absolute; z-index: 5; background: #fffdf8; border: 1px solid #b8ac93; border-radius: 4px;
+                  box-shadow: 0 3px 14px #0003; padding: .35rem; max-height: 18rem; overflow: auto; width: 17rem; }
+#mapapp .picker button { display: flex; align-items: center; gap: .4rem; width: 100%; text-align: left; font: inherit;
+                         font-size: .88rem; border: 0; background: none; padding: .25rem .35rem; cursor: pointer; border-radius: 3px; }
+#mapapp .picker button:hover, #mapapp .picker button:focus { background: #f1ebde; outline: none; }
+#mapapp .picker .hint, #mapapp .maptip .hint { margin: 0 0 .2rem .35rem; font-size: .78rem; color: #8a7f6a; display: block; }
+#mapapp .picker .life { color: #8a7f6a; font-size: .85em; }
+#mapapp .sw { display: inline-block; width: .8rem; height: .8rem; border-radius: 50%; flex: none; }
+#mapapp .maptip { position: absolute; z-index: 6; pointer-events: none; background: #2e2920; color: #f6f1e4;
+                  font-size: .82rem; padding: .25rem .5rem; border-radius: 3px; max-width: 20rem; }
+#mapapp .maptip .hint { color: #c9bfa9; margin: .1rem 0 0; }
+#mapapp .mapzoom { position: absolute; right: .6rem; top: .6rem; display: flex; flex-direction: column; gap: .25rem; }
+#mapapp .mapzoom button { width: 2rem; height: 2rem; font-size: 1.05rem; cursor: pointer; background: #fffdf8;
+                          border: 1px solid #b8ac93; border-radius: 3px; }
+#mapapp .branches { display: flex; flex-wrap: wrap; gap: .3rem 1rem; font-size: .86rem; margin: .55rem 0 .3rem; }
+#mapapp .branches .chk { display: inline-flex; align-items: center; gap: .3rem; }
+#mapapp .branches .n { color: #8a7f6a; font-size: .85em; }
+#mapapp .mapnote { color: #6b6355; font-size: .86rem; max-width: 72ch; margin: .3rem 0 0; }
+@media print { #mapapp { display: none; } }
+
+/* ---- the chronicle, in two layouts for comparison (?layout=right | ?layout=bottom) */
+#mapapp .mapgrid { display: grid; grid-template-columns: minmax(0, 1fr); }
+#mapapp.layout-right .mapgrid { grid-template-columns: minmax(0, 1fr) 21rem; }
+#mapapp .side { display: flex; flex-direction: column; background: #fbf8f1; border: 1px solid #cdc2ab;
+                border-top: 0; min-height: 0; font-size: .86rem; }
+#mapapp.layout-right .side { border-left: 0; contain: size; }   /* as tall as the map, never taller */
+#mapapp.layout-bottom .side { height: 13.5rem; }
+#mapapp .chronhead { flex: none; padding: .35rem .7rem; font-size: .76rem; letter-spacing: .06em;
+                     text-transform: uppercase; color: #8a7f6a; border-bottom: 1px solid #e6dfd0; }
+#mapapp .chron { flex: 1; min-height: 0; overflow: auto; position: relative; }
+#mapapp .chron section.yr { padding: .3rem .7rem .4rem; border-bottom: 1px solid #eee7d8; color: #8a7f6a; }
+#mapapp .chron section.yr h4 { margin: 0 0 .1rem; font-size: .85rem; font-variant-numeric: tabular-nums; }
+#mapapp .chron ul { list-style: none; margin: 0; padding: 0; }
+#mapapp .chron li { margin: .1rem 0; line-height: 1.3; }
+#mapapp .chron li.k-migration { font-weight: 600; }
+#mapapp .chron section.now { background: #fff3cf; color: #2e2920; }
+#mapapp .chron section.recent { color: #4a4336; }
+#mapapp.layout-bottom .chron { display: flex; flex-direction: row; overflow-x: auto; overflow-y: hidden; }
+#mapapp.layout-bottom .chron section.yr { flex: none; width: 15.5rem; border-bottom: 0; border-right: 1px solid #eee7d8;
+                                          overflow-y: auto; }
+#mapapp .caption .when { font-weight: 600; margin-right: .2rem; }
+#mapapp .caption .cap { transition: opacity .4s; }
+#mapapp button.lnk.corr { font-weight: 600; }
+
+/* ---- the dock: open, or a thin rail with the year */
+#mapapp .chronhead { display: flex; align-items: center; justify-content: space-between; }
+#mapapp #chronclose { border: 0; background: none; font-size: 1.25rem; line-height: 1; padding: 0 .2rem; color: #8a7f6a;
+                      cursor: pointer; }
+#mapapp #chronclose:hover { color: #2e2920; }
+#mapapp .chronrail { flex: 1; display: flex; flex-direction: column; align-items: center; gap: .6rem; padding: .7rem 0;
+                     border: 0; background: #fbf8f1; color: #6b6355; cursor: pointer; font: inherit; }
+#mapapp .chronrail:hover { background: #fff3cf; color: #2e2920; }
+#mapapp .chronrail .rl { writing-mode: vertical-rl; letter-spacing: .06em; font-size: .78rem; text-transform: uppercase; }
+#mapapp .chronrail .ry { writing-mode: vertical-rl; font-variant-numeric: tabular-nums; font-weight: 600; }
+#mapapp.chron-closed .mapgrid { grid-template-columns: minmax(0, 1fr) 2.1rem; }
+#mapapp.chron-closed .side .chronhead, #mapapp.chron-closed .side .chron { display: none; }
+#mapapp .mapgrid { transition: grid-template-columns .25s ease; }
+
+/* ---- the whole window's width, not the text column's; and as tall as the window allows */
+#mapapp.bleed { width: calc(100vw - 2.4rem); max-width: 110rem; position: relative; left: 50%; transform: translateX(-50%); }
+#mapapp.bleed #world { height: clamp(420px, calc(100vh - 9rem), 820px); }
+#mapapp.bleed .branches, #mapapp.bleed .mapnote { max-width: 64rem; }
+
+/* ---- full screen */
+#mapapp.full { width: 100vw; max-width: none; height: 100vh; left: 0; transform: none; margin: 0; padding: .5rem;
+               box-sizing: border-box; background: var(--paper); display: flex; flex-direction: column; }
+#mapapp.full .mapgrid { flex: 1; min-height: 0; }
+#mapapp.full #world { height: 100%; min-height: 0; }
+#mapapp.full .mapwrap { height: 100%; }
+#mapapp.full .branches { flex: none; margin-top: .3rem; }
+#mapapp.full .mapnote { display: none; }
+#mapapp .chronrail[hidden] { display: none; }
+
+/* map panel: a home's reasons, and gaps said rather than filled */
+#mapapp .stops .why { display: block; font-size: .8rem; color: #6b6355; margin: .1rem 0 .35rem; line-height: 1.35; }
+#mapapp .stops li.gap { display: block; list-style: none; font-size: .8rem; color: #8a7f6a; font-style: italic; margin: .1rem 0 .3rem; }
+#mapapp circle.dot.unknown { stroke-dasharray: 2 1.6; stroke-width: 1.4; }
+
+/* Play: the year's migrations as a headline (one line per corridor), a heat strip of where they are,
+   and the speed */
+#mapapp .caption .cap { display: inline-flex; flex-direction: column; vertical-align: middle; }
+#mapapp .caption .cap .line { display: block; line-height: 1.3; }
+#mapapp .caption .cap .more { color: #8a7f6a; font-size: .85rem; }
+#mapapp .heat { position: absolute; left: 9px; right: 9px; bottom: -7px; height: 7px; pointer-events: none; }
+#mapapp .heat i { position: absolute; bottom: 0; width: 2px; margin-left: -1px; background: #a8452c; opacity: .55; border-radius: 1px; }
+#mapapp .speed { display: inline-flex; }
+#mapapp .mapbar .speed button { padding: .15rem .45rem; border-radius: 0; margin-left: -1px; font-size: .82rem; color: #6b6355; }
+#mapapp .mapbar .speed button:first-child { border-radius: 4px 0 0 4px; }
+#mapapp .mapbar .speed button:last-child { border-radius: 0 4px 4px 0; }
+#mapapp .mapbar .speed button.on { background: #fff3cf; color: #2e2920; font-weight: 600; }
+
+/* phones (Peter, 2026-11-02, looking at it on his phone): the world box as tall as the world needs,
+   the Latvia inset small enough to leave the Americas visible, and the chronicle closed to its rail */
+@media (max-width: 640px) {
+  #mapapp.bleed { width: calc(100vw - 1rem); }
+  #mapapp.bleed #world, #mapapp #world { height: clamp(300px, 92vw, 520px); }
+  #mapapp .inset { width: 46%; min-width: 0; right: .35rem; bottom: .35rem; }
+  #mapapp .insettitle { font-size: .65rem; }
+  #mapapp .mapbar { gap: .35rem .6rem; }
+  #mapapp .find input { width: 9rem; }
+  #mapapp .findlist { min-width: 0; width: calc(100vw - 2rem); right: -.5rem; }
+  /* the year's headline: left, clear of the zoom buttons, wrapping */
+  #mapapp .caption { left: .4rem; transform: none; max-width: calc(100% - 3.6rem); white-space: normal; font-size: .82rem;
+                     padding: .3rem .5rem; }
+  #mapapp .caption .yr { font-size: 1.15rem; }
+  /* a person's or a corridor's panel goes under the map, full width, instead of covering it */
+  #mapapp .mappanel { position: static; width: auto; max-height: none; margin: .5rem 0 0; box-shadow: none; }
+}
+
+/* the chronicle's "↑ N new" pill: shown when the reader has scrolled away from the newest years */
+#mapapp .side { position: relative; }
+#mapapp .chronnew { position: absolute; top: 2.1rem; left: 50%; transform: translateX(-50%); z-index: 5;
+                    border: 1px solid #cdc2ab; border-radius: 999px; background: #fff3cf; color: #2e2920;
+                    font: inherit; font-size: .8rem; padding: .15rem .7rem; cursor: pointer;
+                    box-shadow: 0 2px 8px rgba(60, 50, 30, .18); }
+#mapapp .chronnew[hidden] { display: none; }
+
+/* the ad-hoc lens (double-click the world): bottom-left; × to close; on a phone it stands in for Latvia */
+#mapapp .lensx { position: absolute; right: .3rem; top: .15rem; z-index: 2; border: 0; background: none;
+                 font-size: 1.25rem; line-height: 1; color: #6b6355; cursor: pointer; padding: 0 .25rem; }
+#mapapp .lensx:hover { color: #2e2920; }
+#mapapp g.adhoc rect { stroke-dasharray: 3 2; }
+@media (max-width: 640px) {
+}
+/* follow (during Play) */
+#mapapp .mapbar button.follow { font-size: .82rem; color: #6b6355; }
+#mapapp .mapbar button.follow.on { background: #fff3cf; color: #2e2920; font-weight: 600; }
+
+/* lens slots along the bottom: right (the old inset's place), left, centre on wide screens */
+#mapapp .inset.slot-l { right: auto; left: .6rem; }
+#mapapp .inset.slot-c { right: auto; left: 50%; transform: translateX(-50%); }
+#mapapp.slots-3 .inset { width: 30%; }
+#mapapp .inset.pinned .insettitle::before { content: "📌 "; font-size: .7rem; }
+#mapapp g.lv.cand rect { stroke: #8c2d19; stroke-opacity: .45; stroke-dasharray: 2 3; fill: rgba(255, 253, 248, .01); cursor: pointer; pointer-events: all; }
+#mapapp g.lv.cand text { fill: #8c2d19; fill-opacity: .7; font-weight: 500; cursor: pointer; pointer-events: all; }
+#mapapp g.lv.cand:hover rect { stroke-opacity: .9; }
+
+/* the leader from a lens's box on the world to the lens */
+#mapapp line.leader { stroke: #8c2d19; stroke-width: 1; stroke-dasharray: 3 3; stroke-opacity: .55; pointer-events: none; }
+
+/* ---- the timeline: a strip of years along the bottom of the map frame in place of the slider. Shown in
+   the timeline layout (?layout=timeline) and in full screen; there, the chronicle is a column on the
+   right; in the timeline layout on the page, it folds open as a row under the map. */
+#mapapp .timeline { display: none; }
+#mapapp.layout-timeline .timeline, #mapapp.full .timeline { display: block; }
+#mapapp.layout-timeline .yearwrap, #mapapp.layout-timeline #yearout,
+#mapapp.full .yearwrap, #mapapp.full #yearout { display: none; }
+#mapapp.layout-timeline .caption, #mapapp.full .caption { display: none; }   /* the strip says the year */
+#mapapp.layout-timeline .inset, #mapapp.full .inset { bottom: 4.9rem; }
+#mapapp.full .tlmore { display: none; }
+#mapapp.layout-timeline:not(.full) .mapgrid { grid-template-columns: minmax(0, 1fr); }
+#mapapp.layout-timeline:not(.full) .side { display: none; }
+#mapapp.layout-timeline.tl-open:not(.full) .side { display: flex; grid-column: 1; height: 18rem; border-top: 0; contain: none; }
+#mapapp.layout-timeline:not(.full) .side .chronhead, #mapapp.layout-timeline:not(.full) .side .chron { display: flex; }
+#mapapp.layout-timeline:not(.full) .side .chron { display: block; }
+#mapapp.layout-timeline:not(.full) .chronrail, #mapapp.layout-timeline:not(.full) #chronclose { display: none; }
+#mapapp.full .mapgrid { grid-template-columns: minmax(0, 1fr) 22rem; grid-template-rows: minmax(0, 1fr); }
+#mapapp.full.chron-closed .mapgrid { grid-template-columns: minmax(0, 1fr) 2.1rem; }
+#mapapp.full .side { display: flex; height: auto; min-height: 0; border-left: 0; contain: size; }
+#mapapp .timeline { position: absolute; left: .6rem; right: .6rem; bottom: .5rem; z-index: 6;
+                    background: #fbf8f1; border: 1px solid #cdc2ab; border-radius: 6px;
+                    box-shadow: 0 2px 10px rgba(60, 50, 30, .12); padding: .15rem .5rem .1rem; }
+#mapapp .timeline svg { display: block; width: calc(100% - 6.5rem); height: 46px; cursor: pointer; touch-action: none; outline: none; background: none; }
+#mapapp .timeline line.base { stroke: #b9ad94; }
+#mapapp .timeline text.tick { font-size: 10px; fill: #8a7f6a; text-anchor: middle; }
+#mapapp .timeline line.cursor { stroke: #a8452c; stroke-width: 2; }
+#mapapp .timeline rect.m-migration { fill: #a8452c; }
+#mapapp .timeline rect.m-move { fill: #4e7fb5; }
+#mapapp .timeline rect.m-born { fill: #6d9f4b; }
+#mapapp .timeline rect.m-died { fill: #8a7f6a; }
+#mapapp .timeline rect.future { opacity: .28; }
+#mapapp .tlnow { position: absolute; bottom: 100%; margin-bottom: .3rem; z-index: 7; display: inline-flex; gap: .7rem; align-items: baseline;
+                 max-width: 62%; padding: .2rem .6rem; background: rgba(255, 253, 248, .95); border: 1px solid #cdc2ab;
+                 border-radius: 6px; font-size: .84rem; white-space: nowrap; overflow: hidden; }
+#mapapp .tlnow .tly { font-weight: 700; font-variant-numeric: tabular-nums; }
+#mapapp .tlnow .tle { overflow: hidden; text-overflow: ellipsis; }
+#mapapp .tlnow .tle + .tle::before { content: "· "; color: #8a7f6a; }
+#mapapp .tlnow .tlq { color: #8a7f6a; font-size: .8rem; }
+#mapapp .tlmore { position: absolute; right: .4rem; top: 50%; transform: translateY(-50%); border: 1px solid #cdc2ab;
+                  background: #fffdf8; border-radius: 4px; font: inherit; font-size: .8rem; color: #6b6355; padding: .15rem .5rem; cursor: pointer; }
+@media (max-width: 640px) {
+  #mapapp.layout-timeline .inset { bottom: 4.2rem; }
+  #mapapp .tlnow { max-width: 92%; white-space: normal; }
+  #mapapp .tlnow .tle + .tle { display: none; }
+}
+#mapapp .timeline text.tick { fill: #6b6355; font-size: 11px; }
+#mapapp.full ~ .layoutswitch, #mapapp.full .layoutswitch { display: none; }
+
+/* lenses fade in and out; the boxes and leaders on the world fade in when they appear */
+#mapapp .inset { transition: opacity .45s ease; }
+#mapapp .inset.fade { opacity: 0; }
+@keyframes famfadein { from { opacity: 0; } to { opacity: 1; } }
+#mapapp g.lv, #mapapp line.leader { animation: famfadein .5s ease; }
+
+/* ---- the chronicle (timeline/) */
+.chronctl { display: flex; flex-wrap: wrap; gap: .4rem 1rem; align-items: center; margin: .6rem 0 1rem; font-size: .9rem; }
+.chronctl .lines { display: flex; flex-wrap: wrap; gap: .2rem .9rem; }
+.chronctl label { white-space: nowrap; }
+.chronctl button { margin-left: auto; font: inherit; font-size: .85rem; padding: .15rem .6rem; border: 1px solid #cdc2ab;
+                   background: #fffdf8; border-radius: 4px; cursor: pointer; }
+.chronicle { display: flex; flex-direction: column; }
+.chronicle.rev { flex-direction: column-reverse; }
+.chronicle.rev .decade { display: flex; flex-direction: column-reverse; }
+.chronicle.rev .decade > h2 { order: 1; }
+.chronicle .decade > h2 { margin: 1.6rem 0 .3rem; border-bottom: 1px solid #e6dfd0; }
+.chronicle .cyear { display: grid; grid-template-columns: 3.4rem 1fr; gap: .2rem .8rem; margin: .25rem 0; }
+.chronicle .cyear h3 { margin: 0; font-size: 1rem; font-variant-numeric: tabular-nums; font-weight: 600; }
+.chronicle .cyear h3 a { text-decoration: none; color: inherit; }
+.chronicle .cyear h3 a:hover { text-decoration: underline; }
+.chronicle .cyear ul { list-style: none; margin: 0; padding: 0; }
+.chronicle li { margin: .05rem 0 .2rem; line-height: 1.4; }
+.chronicle li.world { color: #8a7f6a; font-style: italic; font-size: .92rem; }
+.chronicle li.k-mig { font-size: 1.02rem; }
+.chronicle li .more { border-bottom: 1px dotted #8a7f6a; cursor: help; }
+.chronicle .cyear[hidden], .chronicle li[hidden] { display: none; }
