@@ -93,7 +93,7 @@ path.p { fill: none; stroke: #b5b5b5; stroke-width: 1; }
 path.p.pc-probable, path.p.pc-possible, path.p.pc-weak, path.p.pc-unlikely, path.p.pc-ruled-out, path.p.pc-unverified-tree { stroke-dasharray: 2 3; }
 path.p.pc-unlikely, path.p.pc-ruled-out { stroke: var(--red); opacity: .45; }
 .xmark { fill: var(--red); font: bold 12px var(--sans); text-anchor: middle; dominant-baseline: central; opacity: .8; pointer-events: none; }
-.llabel { font: italic 9.5px var(--sans); fill: #555; text-anchor: middle; pointer-events: none; }
+.llabel { font: italic 9.5px var(--sans); fill: #555; text-anchor: middle; pointer-events: none; paint-order: stroke; stroke: var(--paper); stroke-width: 3px; stroke-linejoin: round; }
 .llabel.rej { fill: var(--red); }
 .dim { opacity: .18; }
 

@@ -256,9 +256,10 @@
 
   /** The focus subgraph: ancestors and/or descendants of the focus within N generations. */
   function focusSet(R, RU) {
-    const F = new Set([state.focus]), FU = new Set();
+    const F = new Set([state.focus]), FU = new Set(), upSet = new Set(), downSet = new Set();
     const okU = (u) => RU.has(u.id);
     const up = (x, d) => {
+      upSet.add(x);
       if (d >= state.depth) return;
       for (const e of byChild.get(x) || []) {
         if (!edgeOn(e) || (state.blood && e.cls === "adoptive")) continue;
@@ -268,13 +269,14 @@
       }
     };
     const down = (x, d) => {
+      downSet.add(x);
       if (d >= state.depth) return;
       for (const u of unionsOf.get(x) || []) {
         if (!okU(u) || !partnerOn(u, x)) continue;
         const kids = (byUnion.get(u.id) || []).filter((e) => edgeOn(e) && R.has(e.child) && !(state.blood && e.cls === "adoptive" && false));
         if (!kids.length && u.partners.length < 2) continue;
         FU.add(u.id);
-        for (const p of u.partners) if (R.has(p) && partnerOn(u, p)) F.add(p);
+        for (const p of u.partners) if (R.has(p) && partnerOn(u, p)) { F.add(p); downSet.add(p); }
         for (const e of kids) if (!F.has(e.child)) { F.add(e.child); down(e.child, d + 1); }
       }
     };
@@ -285,11 +287,13 @@
       for (const x of [...F]) {
         for (const l of linksOf.get(x) || []) {
           if (!linkOn(l)) continue;
-          // kin a generation below has no place in an ancestors view (nor above, in descendants)
-          if (l.kind === "kin" && l.generation && ((state.mode === "ancestors" && l.generation < 0) || (state.mode === "descendants" && l.generation > 0))) continue;
+          // kin a generation below has no place on an ancestor branch (nor above, on a descendant branch)
+          if (l.kind === "kin" && l.generation && ((l.generation < 0 && !downSet.has(x)) || (l.generation > 0 && !upSet.has(x)))) continue;
           const o = l.from === x ? l.to : l.from;
           if (R.has(o) && isGhost(o)) {
             F.add(o);
+            if (upSet.has(x)) upSet.add(o);
+            if (downSet.has(x)) downSet.add(o);
             for (const e of byChild.get(o) || []) {   // its own (candidate) parents, if shown already
               const u = U.get(e.union);
               if (edgeOn(e) && u.partners.some((p) => F.has(p))) FU.add(u.id);
@@ -298,8 +302,8 @@
         }
       }
       for (const uid of [...FU]) {
-        for (const e of byUnion.get(uid) || []) if (edgeOn(e) && R.has(e.child) && isGhost(e.child)) F.add(e.child);
-        for (const p of U.get(uid).partners) if (R.has(p) && partnerOn(U.get(uid), p) && isGhost(p)) F.add(p);
+        for (const e of byUnion.get(uid) || []) if (edgeOn(e) && R.has(e.child) && isGhost(e.child)) { F.add(e.child); upSet.add(e.child); }
+        for (const p of U.get(uid).partners) if (R.has(p) && partnerOn(U.get(uid), p) && isGhost(p)) { F.add(p); upSet.add(p); }
       }
     }
     return { F, FU };
@@ -378,14 +382,15 @@
   }
 
   function computeLayout(vis) {
-    if ((state.mode === "ancestors" || state.mode === "descendants") && state.focus && vis.people.includes(state.focus))
-      return treeLayout(vis, state.mode === "ancestors" ? -1 : 1);
+    if ((state.mode === "ancestors" || state.mode === "descendants" || state.mode === "both") && state.focus && vis.people.includes(state.focus))
+      return treeLayout(vis, state.mode === "ancestors" ? -1 : state.mode === "descendants" ? 1 : 0);
     return dagreLayout(vis);
   }
 
   /** A tidy tree (Reingold–Tilford, d3.tree) from the focus: up through parent unions
-   *  (ancestors) or down through own unions (descendants). Same-generation extras — candidate
-   *  siblings, identities, kin, spouses — sit beside the person they belong to. */
+   *  (ancestors), down through own unions (descendants), or both joined at the focus.
+   *  Same-generation extras — candidate siblings, identities, kin, spouses — sit beside
+   *  the person they belong to. */
   function treeLayout(vis, dir) {
     const people = new Set(vis.people), us = new Map(vis.unions.map((x) => [x.u.id, x]));
     const placed = new Set();
@@ -395,43 +400,44 @@
     const ph = (children) => ({ id: "ph:" + (phantom++), phantom: true, children });
 
     // extras that sit at a person's level (returned to be inserted beside them)
-    function extrasOf(id, viaUnion) {
+    function extrasOf(id, viaUnion, d) {
       const out = [];
       for (const l of linksOf.get(id) || []) {
         const o = l.from === id ? l.to : l.from;
         if (!vis.links.includes(l) || placed.has(o)) continue;
         if (l.kind === "kin" && l.generation) continue;   // kinAbove, or a satellite
-        placed.add(o); out.push({ id: o, children: [] });
+        placed.add(o); out.push({ id: o, linkedExtra: true, children: [] });
       }
-      if (dir < 0 && viaUnion) {
+      if (d < 0 && viaUnion) {
         // candidate siblings: ghost children of the union this person came from
         for (const e of byChild.get(id) || []) {
           const x = us.get(e.union); if (!x) continue;
-          for (const k of x.ks) if (k.child !== id && isGhost(k.child) && !placed.has(k.child) && people.has(k.child)) { placed.add(k.child); out.push(build(k.child)); }
+          for (const k of x.ks) if (k.child !== id && isGhost(k.child) && !placed.has(k.child) && people.has(k.child)) { placed.add(k.child); out.push(build(k.child, false, d)); }
         }
       }
       return out;
     }
 
-    function kinAbove(id) {
+    function kinAbove(id, d) {
       // kin candidates one or more generations above (ancestors view): phantom chain to their row
       const out = [];
       for (const l of linksOf.get(id) || []) {
         if (!vis.links.includes(l) || l.kind !== "kin" || !l.generation || l.to !== id) continue;
-        if ((dir < 0) !== (l.generation > 0)) continue;
+        if ((d < 0) !== (l.generation > 0)) continue;
         const o = l.from; if (placed.has(o)) continue;
         placed.add(o);
-        let node = build(o, true);
+        let node = build(o, true, d);
         for (let i = 0; i < 2 * Math.abs(l.generation) - 1; i++) node = ph([node]);
+        node.linkedExtra = true;
         out.push(node);
       }
       return out;
     }
 
-    function build(id, already) {
+    function build(id, already, d) {
       if (!already) placed.add(id);
       const node = { id, children: [] };
-      if (dir < 0) {
+      if (d < 0) {
         const pe = (byChild.get(id) || []).filter((e) => us.has(e.union) && edgeOn(e)).sort((a, b) => firmKey(a) - firmKey(b));
         for (const e of pe) {
           if (placed.has(e.union)) continue;
@@ -440,8 +446,8 @@
           const un = { id: e.union, union: true, children: [] };
           for (const p of x.ps.slice().sort((a, b) => sexKey(a) - sexKey(b))) {
             if (placed.has(p)) continue;
-            un.children.push(build(p));
-            un.children.push(...extrasOf(p, true));
+            un.children.push(build(p, false, d));
+            un.children.push(...extrasOf(p, true, d));
           }
           node.children.push(un);
         }
@@ -450,53 +456,65 @@
           const x = us.get(u.id); if (!x || placed.has(u.id)) continue;
           placed.add(u.id);
           const un = { id: u.id, union: true, children: [] };
-          for (const e of x.ks) if (!placed.has(e.child)) { un.children.push(build(e.child)); un.children.push(...extrasOf(e.child, false)); }
+          for (const e of x.ks) if (!placed.has(e.child)) { un.children.push(build(e.child, false, d)); un.children.push(...extrasOf(e.child, false, d)); }
           node.children.push(un);
         }
       }
-      node.children.push(...kinAbove(id));
+      node.children.push(...kinAbove(id, d));
       return node;
     }
 
     // spouses (descendants view) sit beside the person: collect them as extras of the partner
-    const spouseExtras = (id) => {
+    const spouseExtras = (id, d) => {
       const out = [];
-      if (dir > 0) for (const u of unionsOf.get(id) || []) {
+      if (d > 0) for (const u of unionsOf.get(id) || []) {
         const x = us.get(u.id); if (!x) continue;
         for (const p of x.ps) if (p !== id && !placed.has(p)) { placed.add(p); out.push({ id: p, children: [] }); }
       }
       return out;
     };
-    placed.add(state.focus);
-    const focusExtras = [...extrasOf(state.focus, false), ...spouseExtras(state.focus)];
-    const focusNode = build(state.focus, true);
-    const root = ph([focusNode, ...focusExtras]);
-    if (dir > 0) {
-      // add spouse extras level by level (the tree is built; walk it)
-      const walk = (n) => {
-        for (const c of n.children) {
-          if (c.union) for (let i = 0; i < c.children.length; i++) {
-            const ch = c.children[i];
-            if (!ch.phantom && !ch.union) { const ex = spouseExtras(ch.id); c.children.splice(i + 1, 0, ...ex); i += ex.length; }
-          }
-          walk(c);
-        }
-      };
-      walk(root);
-    }
     const lr = state.orient === "lr";
     // breadth step (between siblings) and depth step (half a generation: unions sit between)
     const dx = lr ? NODE_H + 10 : NODE_W + 14, dy = lr ? (NODE_W + 56) / 2 : (NODE_H + 40) / 2;
-    const h = d3.hierarchy(root);
-    d3.tree().nodeSize([dx, dy]).separation((a, b) => {
+    const treeGen = d3.tree().nodeSize([dx, dy]).separation((a, b) => {
+      if (a.data.linkedExtra || b.data.linkedExtra) return 1.45;
       const small = (n) => n.data.union || n.data.phantom;
       const s = small(a) && small(b) ? 0.35 : small(a) || small(b) ? 0.6 : 1;
       return a.parent === b.parent ? s : s * 1.12;
-    })(h);
+    });
     const nodes = new Map();
-    // ancestors go up (TB) or left (LR); descendants down or right
-    const place = (b, d) => (lr ? { x: dir * d, y: b } : { x: b, y: dir * d });
-    h.each((n) => { if (!n.data.phantom) nodes.set(n.data.id, { ...place(n.x, n.depth * dy), near: n.depth <= 1 + 2 * NEAR_GENS }); });
+    const place = (b, depthPos) => (lr ? { x: depthPos, y: b } : { x: b, y: depthPos });
+    const runHalf = (d, includeFocusExtras) => {
+      const fExtras = includeFocusExtras ? [...extrasOf(state.focus, false, d), ...spouseExtras(state.focus, d)] : [];
+      const fNode = build(state.focus, true, d);
+      const root = ph([fNode, ...fExtras]);
+      if (d > 0) {
+        const walk = (n) => {
+          for (const c of n.children) {
+            if (c.union) for (let i = 0; i < c.children.length; i++) {
+              const ch = c.children[i];
+              if (!ch.phantom && !ch.union) { const ex = spouseExtras(ch.id, d); c.children.splice(i + 1, 0, ...ex); i += ex.length; }
+            }
+            walk(c);
+          }
+        };
+        walk(root);
+      }
+      const h = d3.hierarchy(root);
+      treeGen(h);
+      let f0 = null;
+      h.each((n) => { if (n.data.id === state.focus) f0 = n; });
+      const bx0 = f0 ? f0.x : 0, d0 = f0 ? f0.depth : 1;
+      h.each((n) => {
+        if (n.data.phantom) return;
+        if (n.data.id === state.focus && nodes.has(state.focus)) return;
+        const relDepth = n.depth - d0;
+        nodes.set(n.data.id, { ...place(n.x - bx0, d * relDepth * dy), near: n.depth <= 1 + 2 * NEAR_GENS });
+      });
+    };
+    placed.add(state.focus);
+    if (dir <= 0) runHalf(-1, dir < 0);
+    if (dir >= 0) runHalf(1, true);
     // anything visible but not reached: beside the person it is linked to, else in a row
     const bbox = () => {
       let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
@@ -620,9 +638,24 @@
     // same-generation links: between facing box sides (beside each other in TB, stacked in LR)
     for (const l of vis.links) {
       if (l.kind === "kin" && l.generation) continue;
-      const a = nodes.get(l.from), b = nodes.get(l.to);
-      if (!a || !b) continue;
+      const a = nodes.get(l.from), b0 = nodes.get(l.to);
+      if (!a || !b0) continue;
+      let b = b0;
       const horiz = Math.abs(a.x - b.x) > NODE_W * 0.9 || (!layout.lr && Math.abs(a.y - b.y) < NODE_H);
+      if (!horiz && Math.abs(a.x - b0.x) < 5) {
+        // stacked in the same column: anchor to the closest box between a and b0 so lines never cross through intermediate boxes
+        const dirY = Math.sign(b0.y - a.y);
+        for (const id of vis.people) {
+          const c = nodes.get(id);
+          if (c && Math.abs(c.x - a.x) < 5 && Math.sign(c.y - a.y) === dirY && Math.abs(c.y - a.y) < Math.abs(b.y - a.y)) b = c;
+        }
+      } else if (horiz && Math.abs(a.y - b0.y) < 5) {
+        const dirX = Math.sign(b0.x - a.x);
+        for (const id of vis.people) {
+          const c = nodes.get(id);
+          if (c && Math.abs(c.y - a.y) < 5 && Math.sign(c.x - a.x) === dirX && Math.abs(c.x - a.x) < Math.abs(b.x - a.x)) b = c;
+        }
+      }
       let p1, p2, mid;
       if (horiz) {
         const d = a.x < b.x ? 1 : -1;
@@ -667,12 +700,18 @@
   }
 
   function mark(g, pts, text, cls) {
-    const m = pts[Math.floor(pts.length / 2)];
-    g.append("text").attr("class", cls).attr("x", m.x).attr("y", m.y).text(text);
+    const a = pts[0], b = pts[pts.length - 1];
+    g.append("text").attr("class", cls).attr("x", (a.x + b.x) / 2).attr("y", (a.y + b.y) / 2).text(text);
   }
   function label(g, pts, text, rej) {
-    const m = pts[Math.floor(pts.length / 2)];
-    g.append("text").attr("class", "llabel" + (rej ? " rej" : "")).attr("x", m.x + 4).attr("y", m.y).attr("text-anchor", "start").text(text);
+    if (pts.length >= 4 && Math.abs(pts[1].x - pts[0].x) > 8) {
+      const right = pts[1].x >= pts[0].x;
+      g.append("text").attr("class", "llabel" + (rej ? " rej" : "")).attr("x", pts[0].x + (right ? -NODE_W / 2 : NODE_W / 2))
+        .attr("y", pts[0].y + NODE_H / 2 + 10).attr("text-anchor", "middle").text(text);
+      return;
+    }
+    const a = pts[0], b = pts[pts.length - 1];
+    g.append("text").attr("class", "llabel" + (rej ? " rej" : "")).attr("x", (a.x + b.x) / 2).attr("y", (a.y + b.y) / 2 - 4).attr("text-anchor", "middle").text(text);
   }
 
   function drawNode(g, p, n) {
