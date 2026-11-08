@@ -47,6 +47,14 @@ h1 .life { font-size: .6em; display: inline-block; margin-left: .3em; }
 .card { background: var(--card); border: 1px solid var(--rule); border-radius: 4px; padding: .2rem 1rem .6rem; }
 .card h3 { font-variant: small-caps; letter-spacing: .04em; }
 ul.disc li, ul.explore li { margin-bottom: .45rem; }
+.when { color: var(--muted); font-size: .88rem; font-variant: small-caps; letter-spacing: .03em; white-space: nowrap; }
+p.more { margin-top: .6rem; }
+p.more a::after { content: " →"; }
+
+/* changes/: what was added and corrected, by date */
+.changes section.change h2 { font-size: 1.2rem; margin-top: 1.6rem; }
+.changes section.change ul { padding-left: 1.2rem; }
+.changes section.change li { margin-bottom: .45rem; }
 
 /* evidence labels */
 .ev { display: inline-block; font-size: .78rem; padding: 0 .4em; border-radius: 3px; border: 1px solid currentColor;
