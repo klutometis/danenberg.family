@@ -96,7 +96,7 @@ blockquote.tr { font-style: normal; }
 .trl { font-variant: small-caps; color: var(--muted); }
 .private { color: var(--muted); font-style: italic; }
 figure.record { margin: 1rem 0; }
-figure.record img { max-width: 100%; height: auto; border: 1px solid var(--rule); background: #fff; }
+figure.record img { max-width: 100%; max-height: 90vh; width: auto; height: auto; border: 1px solid var(--rule); background: #fff; }
 figcaption { font-size: .9rem; color: var(--muted); }
 .treelink { margin-top: 2rem; font-size: .95rem; }
 

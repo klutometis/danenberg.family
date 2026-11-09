@@ -5,4 +5,4 @@ The generated public site of the Danenberg family history, served by GitHub Page
 (`make www`, privacy-checked by `www_check`) and published with `make publish`.
 Don't edit here: every publish replaces the whole tree.
 
-Last published from klutometis/family@e690915+uncommitted.
+Last published from klutometis/family@253e317+uncommitted.
