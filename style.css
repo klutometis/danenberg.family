@@ -180,7 +180,10 @@ table.rows { border-collapse: collapse; font-size: .85em; margin: .4rem 0; min-w
 table.rows th, table.rows td { border-bottom: 1px solid var(--rule, #ddd); padding: .2rem .4rem; text-align: left; vertical-align: top; }
 table.rows .b { color: var(--muted, #555); white-space: nowrap; }
 .srcimgs figure.record { max-width: 32rem; }
-figure.evidence img { width: 100%; }
+/* evidence pages: the whole record page as large as the window allows (natural size at most), no height cap */
+figure.evidence { width: 100vw; position: relative; left: 50%; margin-left: -50vw; padding: 0 1rem; box-sizing: border-box; }
+figure.evidence img { width: auto; max-width: 100%; max-height: none; }
+figure.evidence figcaption { max-width: 64rem; margin: .4rem auto 0; }
 figcaption a.ctx { white-space: nowrap; }
 
 /* ---------------------------------------------------------------- the family map */
