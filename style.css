@@ -51,6 +51,12 @@ ul.disc li, ul.explore li { margin-bottom: .45rem; }
 p.more { margin-top: .6rem; }
 p.more a::after { content: " →"; }
 
+/* person pages: low-confidence records, shown for a human to judge */
+section.possible ul { padding-left: 1.2rem; }
+section.possible li { margin-bottom: .45rem; }
+section.possible q { font-style: italic; }
+section.possible .why { color: var(--muted); font-size: .92rem; }
+
 /* changes/: what was added and corrected, by date */
 .changes section.change h2 { font-size: 1.2rem; margin-top: 1.6rem; }
 .changes section.change ul { padding-left: 1.2rem; }
